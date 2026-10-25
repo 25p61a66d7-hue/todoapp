@@ -1,0 +1,241 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Tasks</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: #111;
+      color: #222;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .app {
+      background: white;
+      width: 90%;
+      max-width: 650px;
+      padding: 30px;
+      border-radius: 20px;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 5px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #777;
+      margin-bottom: 25px;
+    }
+
+    .entry {
+      display: flex;
+      gap: 10px;
+    }
+
+    input {
+      flex: 1;
+      min-width: 0;
+      padding: 15px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 12px 18px;
+      border: none;
+      border-radius: 10px;
+      background: #6957ed;
+      color: white;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    .filters {
+      display: flex;
+      gap: 20px;
+      margin: 22px 0;
+      color: #777;
+    }
+
+    .filters button {
+      background: transparent;
+      color: #555;
+      padding: 5px;
+    }
+
+    .task {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border: 1px solid #eee;
+      padding: 14px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+    }
+
+    .task span {
+      flex: 1;
+      overflow-wrap: anywhere;
+    }
+
+    .task.done span {
+      text-decoration: line-through;
+      color: #999;
+    }
+
+    .task input {
+      flex: none;
+      width: 18px;
+      height: 18px;
+    }
+
+    .task .delete {
+      background: transparent;
+      color: #777;
+      padding: 5px;
+    }
+
+    .summary {
+      color: #777;
+      display: flex;
+      justify-content: space-between;
+      font-size: 14px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <h1>✓ My Tasks</h1>
+    <p class="subtitle">Plan your day. Make progress.</p>
+
+    <div class="entry">
+      <input id="taskInput" placeholder="What do you need to do?">
+      <button onclick="addTask()">+ Add</button>
+    </div>
+
+    <div class="summary">
+      <span id="remaining">0 remaining</span>
+      <span id="completed">0 completed</span>
+    </div>
+
+    <div class="filters">
+      <button onclick="setFilter('all')">All</button>
+      <button onclick="setFilter('active')">Active</button>
+      <button onclick="setFilter('completed')">Completed</button>
+    </div>
+
+    <div id="taskList"></div>
+
+    <div class="summary">
+      <span id="total">0 total tasks</span>
+      <button onclick="clearCompleted()">Clear completed</button>
+    </div>
+  </main>
+
+  <script>
+    let tasks = [];
+    let filter = "all";
+
+    function addTask() {
+      const input = document.getElementById("taskInput");
+      const text = input.value.trim();
+
+      if (!text) return;
+
+      tasks.push({
+        id: Date.now(),
+        text: text,
+        done: false
+      });
+
+      input.value = "";
+      render();
+    }
+
+    document.getElementById("taskInput").addEventListener(
+      "keydown", function(event) {
+        if (event.key === "Enter") addTask();
+      }
+    );
+
+    function setFilter(value) {
+      filter = value;
+      render();
+    }
+
+    function toggleTask(id) {
+      tasks = tasks.map(task =>
+        task.id === id ? {...task, done: !task.done} : task
+      );
+      render();
+    }
+
+    function deleteTask(id) {
+      tasks = tasks.filter(task => task.id !== id);
+      render();
+    }
+
+    function clearCompleted() {
+      tasks = tasks.filter(task => !task.done);
+      render();
+    }
+
+    function render() {
+      const list = document.getElementById("taskList");
+      list.innerHTML = "";
+
+      const visible = tasks.filter(task => {
+        if (filter === "active") return !task.done;
+        if (filter === "completed") return task.done;
+        return true;
+      });
+
+      visible.forEach(task => {
+        const row = document.createElement("div");
+        row.className = "task" + (task.done ? " done" : "");
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.checked = task.done;
+        checkbox.addEventListener("change", () =>
+          toggleTask(task.id)
+        );
+
+        const label = document.createElement("span");
+        label.textContent = task.text;
+
+        const del = document.createElement("button");
+        del.className = "delete";
+        del.textContent = "×";
+        del.onclick = () => deleteTask(task.id);
+
+        row.append(checkbox, label, del);
+        list.appendChild(row);
+      });
+
+      document.getElementById("remaining").textContent =
+        tasks.filter(t => !t.done).length + " remaining";
+
+      document.getElementById("completed").textContent =
+        tasks.filter(t => t.done).length + " completed";
+
+      document.getElementById("total").textContent =
+        tasks.length + " total tasks";
+    }
+
+    render();
+  </script>
+</body>
+</html>
